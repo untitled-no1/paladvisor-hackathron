@@ -8,6 +8,7 @@ using HoloToolkit.Unity.InputModule;
 using System;
 using System.Collections;
 using System.Text;
+using UnityEngine.UI;
 
 namespace HoloToolkit.Examples.GazeRuler
 {
@@ -23,6 +24,25 @@ namespace HoloToolkit.Examples.GazeRuler
 
         private const float defaultLineScale = 0.005f;
         private IEnumerator enumerator;
+        private IList<Texture2D> _textures;
+        public void Start()
+        {
+            _textures = new List<Texture2D>();
+            _textures.Add(Resources.Load("Sprites/00_Null") as Texture2D);
+            _textures.Add(Resources.Load("Sprites/01_Width") as Texture2D);
+            _textures.Add(Resources.Load("Sprites/02_Length") as Texture2D);
+            _textures.Add(Resources.Load("Sprites/03_Height") as Texture2D);
+            _textures.Add(Resources.Load("Sprites/10_Null") as Texture2D);
+            _textures.Add(Resources.Load("Sprites/11_Width") as Texture2D);
+            _textures.Add(Resources.Load("Sprites/12_Height") as Texture2D);
+
+            InstructionsGameObject = GameObject.FindGameObjectWithTag("InstructionsText");
+            InstructionsText = InstructionsGameObject.GetComponent<Text>();
+            InstructionsText.text = "Set Destination: Width";
+            InstructionsImageGameObject = GameObject.FindGameObjectWithTag("InstructionsImage");
+            InstructionsImage = InstructionsImageGameObject.GetComponent<RawImage>();
+            InstructionsImage.texture = _textures[1];
+        }
 
         // place point and lines
         public void AddPoint(GameObject LinePrefab, GameObject PointPrefab, GameObject TextPrefab)
@@ -85,7 +105,7 @@ namespace HoloToolkit.Examples.GazeRuler
                     IsStart = false
                 };
                 // custom code here
-                Debug.Log("1 current distance" + distance);
+                Debug.Log("current distance" + distance);
 
                 if (enumerator == null)
                 {
@@ -140,6 +160,10 @@ namespace HoloToolkit.Examples.GazeRuler
 
 
         private int cnt = 0;
+        private GameObject InstructionsGameObject;
+        private Text InstructionsText;
+        private GameObject InstructionsImageGameObject;
+        private RawImage InstructionsImage;
 
         /// <summary>
         /// CUSTOM CODE
@@ -150,29 +174,44 @@ namespace HoloToolkit.Examples.GazeRuler
         public IEnumerator SendRequest(float distance)
         {
             var destination = new Destination();
-            Debug.Log("Destination add width!");
+            Debug.Log("Set Destination add width!");
+            InstructionsText.text = "Destination: Length";
+            InstructionsImage.texture = _textures[2];
             yield return destination.width = distance;
-            Debug.Log("Destination add length!");
+            Debug.Log("Set Destination add length!");
+            InstructionsText.text = "Destination: Height";
+            InstructionsImage.texture = _textures[3];
             yield return destination.length = distance;
-            Debug.Log("Destination add height!");
-            yield return destination.height = distance;
+            Debug.Log("Set Destination add height!");
+            InstructionsText.text = "Gate: Width";
+            InstructionsImage.texture = _textures[5];
+            
+            destination.height = distance;
+            StartCoroutine(DelayedClear());
+            yield return 0.0;
             var list = new List<Gate>();
             Gate gate = null;
             //while (distance > 0)
-            while (cnt < 1) // TODO: change with menu
-            {
+            // while (cnt < 1) // TODO: change with menu
+            // {
                 gate = new Gate();
-                Debug.Log("Gate add width!");
+                Debug.Log("Set Gate add width!");
+                InstructionsText.text = "Gate: Height";
+                InstructionsImage.texture = _textures[6];
                 yield return gate.width = distance;
-                Debug.Log("Gate add height!");
-                yield return gate.height = distance;
+                Debug.Log("Set Gate add height!");
+                gate.height = distance;
                 list.Add(gate);
+            StartCoroutine(DelayedClear());
+                
+
                 cnt++;
-            }
+            // }
             cnt = 0;
             Debug.Log("Destination add gates!");
             destination.gates = list.ToArray();
-
+            // TODO Texture2D.EndcodeToPNG();
+            // TODO Texture2D.GetRawTextureData
             Debug.Log("Serialize json!");
             var json = JsonUtility.ToJson(destination);
 
@@ -182,9 +221,18 @@ namespace HoloToolkit.Examples.GazeRuler
                 Debug.Log("Sending was successful!");
             });
 
+            InstructionsText.text = "Set Destination: Width";
+            InstructionsImage.texture = _textures[1];
             enumerator = null;
         }
         
+
+        private IEnumerator DelayedClear()
+        {
+            yield return new WaitForSeconds(1);
+            Clear();
+        }
+
         private WWW POST(string url, string json, Action onComplete)
         {
             WWW www;

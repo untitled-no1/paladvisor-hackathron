@@ -9,5 +9,6 @@ public class Destination {
     public float width;
     public float height;
     public Gate[] gates;
+    public byte[] image;
 	
 }

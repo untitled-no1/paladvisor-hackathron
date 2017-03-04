@@ -7,4 +7,5 @@ using UnityEngine;
 public class Gate {
     public float width;
     public float height;
+    public byte[] image;
 }
